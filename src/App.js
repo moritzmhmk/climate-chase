@@ -68,7 +68,8 @@ class App extends Component {
   setUserAirport (userId, airportId) {
     const newState = {
       ...this.state,
-      users: this.state.users.map(user => user.id === userId ? {...user, airport: airportId} : user)
+      users: this.state.users.map(user => user.id === userId ? {...user, airport: airportId} : user),
+      activeUser: this.state.users[(this.state.users.findIndex(user => user.id === this.state.activeUser) + 1) % this.state.users.length].id
     }
     console.log(newState)
     this.setState(newState)
