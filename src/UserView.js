@@ -3,7 +3,7 @@ import React from 'react';
 const UserView = ({user, active, airports, onSearch, onSkip, onSelect}) => {
   const currentAirport = airports.find(airport => airport.id === user.airport)
 
-  const destinations = currentAirport.destinations.map(destination => <div onClick={() => onSelect(destination.id)}>{destination.id} ({destination.emissions})</div>)
+  const destinations = currentAirport.destinations.map(destination => <div onClick={() => onSelect(destination)}>{destination.id} ({destination.emissions})</div>)
   let actionText = <span>Pick your destination: {destinations}</span>
     if (user.moved) {
       actionText = <span>

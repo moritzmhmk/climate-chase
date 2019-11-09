@@ -74,24 +74,25 @@ class App extends Component {
         }
       ],
       activeUser: "Evil",
+      totalEmissions: 0,
       showOverlay: true
     }
   }
 
-  setUserAirport (userId, airportId) {
-    const evil = this.state.users.find(user => user.id === userId).evil
+  travel (user, destination) {
     const newState = {
       ...this.state,
-      users: this.state.users.map(user => user.id === userId ? {...user, airport: airportId, moved: true} : user),
+      totalEmissions: this.state.totalEmissions + destination.emissions,
+      users: this.state.users.map(u => u.id === user.id ? {...u, airport: destination.id, moved: true} : u),
     }
-    this.setState(newState, () => evil && this.nextUser())
+    this.setState(newState, () => user.evil && this.nextUser())
   }
 
   searchAirport (userId) {
     const user = this.state.users.find(user => user.id === userId)
     const evilUser = this.state.users.find(user => user.evil)
     if (evilUser.airport === user.airport) {
-      return alert("GAME OVER - EVIL WAS FOUND!")
+      this.setState({gameOver: true})
     } else {
       this.nextUser(true)
     }
@@ -114,6 +115,20 @@ class App extends Component {
   render () {
     const { showOverlay, airports, users } = this.state
     const activeUser = users.find(user => user.id === this.state.activeUser)
+
+    const percentEmissions = this.state.totalEmissions / 200
+
+    if (this.state.gameOver) {
+      return <div style={{textAlign: "center"}}>
+        <h1>GAME OVER - GOOD WINS</h1>
+      </div>
+    }
+
+    if (percentEmissions >= 100) {
+      return <div style={{textAlign: "center"}}>
+        <h1>GAME OVER - EVIL WINS</h1>
+      </div>
+    }
 
     if (showOverlay) {
       return <div style={{textAlign: "center"}}>
@@ -152,7 +167,6 @@ class App extends Component {
         strokeLinecap="round"
       />)
 
-
     return <>
       <ComposableMap width={600} height={300} projectionConfig={{ scale: 50 }}  projection="geoMercator" style={{background: "#556270"}}>
         <Geographies geography={geoUrl}>
@@ -165,6 +179,10 @@ class App extends Component {
         {userMarkers}
         {activeUserMarker}
       </ComposableMap>
+      <div style={{position: "relative", width: "100%", background: "gray", margin: "20px 0px"}}>
+        <div style={{width: percentEmissions+"%", height: "20px", background: "#FF6B6B"}} />
+        <div style={{position: "absolute", top: 0, width: "100%", textAlign: "center"}}>CO2</div>
+      </div>
       <div style={{display: "flex"}}>
         {users.map(user => (
           <UserView
@@ -173,7 +191,7 @@ class App extends Component {
             airports={this.state.airports}
             onSearch={() => this.searchAirport(user.id)}
             onSkip={() => this.nextUser()}
-            onSelect={airport => this.setUserAirport(user.id, airport)}
+            onSelect={destination => this.travel(user, destination)}
           />
         ))}
       </div>
