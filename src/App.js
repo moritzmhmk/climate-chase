@@ -18,65 +18,110 @@ class App extends Component {
           name: "Berlin (Schoenefeld)",
           id: "SXF",
           coordinates: [13.508611111111, 52.502777777778], // lon, lat
-          destinations: ["LHR", "MEB", "ANC"]
+          destinations: [
+            {id: "LHR", emissions: 2000},
+            {id: "MEB", emissions: 2000},
+            {id: "ANC", emissions: 2000}
+          ]
         },
         {
           name: "London (Heathrow)",
           id: "LHR",
           coordinates: [-0.45, 51.466666666667], // lon, lat
-          destinations: ["MEB"]
+          destinations: [
+            {id: "MEB", emissions: 2000}
+          ]
         },
         {
           name: "Melbourne",
           id: "MEB",
           coordinates: [144.86666666667, -37.7], // lon, lat
-          destinations: ["ANC"]
+          destinations: [
+            {id: "ANC", emissions: 2000}
+          ]
         },
         {
           name: "Anchorage",
           id: "ANC",
           coordinates: [-149.98333333333, 61.166666666667], // lon, lat
-          destinations: ["SXF", "MEB"]
+          destinations: [
+            {id: "SXF", emissions: 2000},
+            {id: "MEB", emissions: 2000}
+          ]
         }
       ],
       users: [
         {
-          id: "P1",
+          id: "Good 1",
           visible: true,
           airport: "SXF"
         },
         {
-          id: "P2",
+          id: "Good 2",
           visible: true,
           airport: "MEB"
         },
         {
-          id: "P3",
+          id: "Good 3",
           visible: true,
           airport: "MEB"
         },
         {
-          id: "P4",
+          id: "Evil",
           visible: false,
+          evil: true,
           airport: "MEB"
         }
       ],
-      activeUser: "P1"
+      activeUser: "Evil",
+      showOverlay: true
     }
   }
 
   setUserAirport (userId, airportId) {
+    const evil = this.state.users.find(user => user.id === userId).evil
     const newState = {
       ...this.state,
-      users: this.state.users.map(user => user.id === userId ? {...user, airport: airportId} : user),
-      activeUser: this.state.users[(this.state.users.findIndex(user => user.id === this.state.activeUser) + 1) % this.state.users.length].id
+      users: this.state.users.map(user => user.id === userId ? {...user, airport: airportId, moved: true} : user),
     }
-    console.log(newState)
-    this.setState(newState)
+    this.setState(newState, () => evil && this.nextUser())
+  }
+
+  searchAirport (userId) {
+    const user = this.state.users.find(user => user.id === userId)
+    const evilUser = this.state.users.find(user => user.evil)
+    if (evilUser.airport === user.airport) {
+      return alert("GAME OVER - EVIL WAS FOUND!")
+    } else {
+      this.nextUser(true)
+    }
+  }
+
+  nextUser (searching) {
+    const next = this.state.users[(this.state.users.findIndex(user => user.id === this.state.activeUser) + 1) % this.state.users.length].id
+    this.setState({
+      ...this.state,
+      users: this.state.users.map(user => {
+        if (user.id === next) { return {...user, moved: false}}
+        if (user.id === this.state.activeUser) { return {...user, searching} }
+        return user
+      }),
+      showOverlay: true,
+      activeUser: next
+    })
   }
 
   render () {
-    const { airports, users, activeUser } = this.state
+    const { showOverlay, airports, users } = this.state
+    const activeUser = users.find(user => user.id === this.state.activeUser)
+
+    if (showOverlay) {
+      return <div style={{textAlign: "center"}}>
+        <h1>Pass to Player "{activeUser.id}".</h1>
+        <button onClick={() => this.setState({...this.state, showOverlay: false})}>Done</button>
+      </div>
+    }
+
     const airportMarkers = airports.map(airport => (
       <Marker coordinates={airport.coordinates}>
         <circle r={4} fill="#CCC" />
@@ -85,16 +130,22 @@ class App extends Component {
 
     const userMarkers = users.filter(user => user.visible).map(user => (
       <Marker coordinates={airports.find(airport => airport.id === user.airport).coordinates}>
-        <circle r={4} fill={user.id === activeUser ? "#C44D58" : "#4ECDC4"} />
+        <circle r={4} fill="#4ECDC4" />
       </Marker>
     ))
 
-    const activeUserAirportId = users.find(user => user.id === activeUser).airport
-    const activeUserAirport = airports.find(airport => airport.id === activeUserAirportId)
+    const activeUserMarker = activeUser.visible && (
+      <Marker coordinates={airports.find(airport => airport.id === activeUser.airport).coordinates}>
+        <circle r={4} fill="#C44D58" />
+      </Marker>
+    )
+
+
+    const _activeUserAirport = airports.find(airport => airport.id === activeUser.airport)
     const activeUserDestinations = airports
-      .filter(airport => activeUserAirport.destinations.includes(airport.id))
-    const activeUserDestinationMarkers = activeUserDestinations.map(destination => <Line
-        from={activeUserAirport.coordinates}
+      .filter(airport => _activeUserAirport.destinations.find(destination => destination.id === airport.id))
+    const activeUserDestinationMarkers = activeUser.visible && activeUserDestinations.map(destination => <Line
+        from={_activeUserAirport.coordinates}
         to={destination.coordinates}
         stroke="#FF6B6B"
         strokeWidth={2}
@@ -112,13 +163,16 @@ class App extends Component {
         {activeUserDestinationMarkers}
         {airportMarkers}
         {userMarkers}
+        {activeUserMarker}
       </ComposableMap>
-      <div>
+      <div style={{display: "flex"}}>
         {users.map(user => (
           <UserView
-            {...user}
-            active={activeUser === user.id}
-            destinations={activeUser === user.id ? activeUserDestinations : []}
+            user={user}
+            active={activeUser.id === user.id}
+            airports={this.state.airports}
+            onSearch={() => this.searchAirport(user.id)}
+            onSkip={() => this.nextUser()}
             onSelect={airport => this.setUserAirport(user.id, airport)}
           />
         ))}
