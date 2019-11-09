@@ -2,6 +2,8 @@ import React from 'react';
 
 import { ComposableMap, Geographies, Geography, Marker, Line } from "react-simple-maps";
 
+import UserView from './UserView'
+
 const geoUrl =
   "https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json";
 
@@ -42,6 +44,16 @@ const users = [
     id: "P2",
     visible: true,
     airport: "MEB"
+  },
+  {
+    id: "P3",
+    visible: true,
+    airport: "MEB"
+  },
+  {
+    id: "P4",
+    visible: false,
+    airport: "MEB"
   }
 ]
 
@@ -64,7 +76,7 @@ function App() {
   const activeUserAirport = airports.find(airport => airport.id === activeUserAirportId)
   const activeUserDestinations = airports
     .filter(airport => activeUserAirport.destinations.includes(airport.id))
-    .map(destination => <Line
+  const activeUserDestinationMarkers = activeUserDestinations.map(destination => <Line
       from={activeUserAirport.coordinates}
       to={destination.coordinates}
       stroke="#FF6B6B"
@@ -73,18 +85,21 @@ function App() {
     />)
 
 
-  return (
-    <ComposableMap width={960} height={960} projection="geoMercator" style={{background: "#556270"}}>
+  return <>
+    <ComposableMap width={600} height={300} projectionConfig={{ scale: 50 }}  projection="geoMercator" style={{background: "#556270"}}>
       <Geographies geography={geoUrl}>
         {({ geographies }) =>
           geographies.map(geo => <Geography key={geo.rsmKey} stroke="none" fill="#AACCB1" geography={geo} />)
         }
       </Geographies>
-      {activeUserDestinations}
+      {activeUserDestinationMarkers}
       {airportMarkers}
       {userMarkers}
     </ComposableMap>
-  );
+    <div>
+      {users.map(user => <UserView {...user} active={activeUser === user.id} destinations={activeUser === user.id ? activeUserDestinations : []} />)}
+    </div>
+  </>
 }
 
 export default App;
