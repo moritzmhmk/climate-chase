@@ -33,7 +33,8 @@ class App extends Component {
           id: "HAM",
           coordinates: [9.987996048, 53.624830834], // lon, lat
           destinations: [
-            {id: "LHR"}
+            {id: "BCN"},
+            {id: "FRA"}
           ]
         },
         {
@@ -41,24 +42,34 @@ class App extends Component {
           id: "LHR",
           coordinates: [-0.45, 51.466666666667], // lon, lat
           destinations: [
+            {id: "HAM"},
+            {id: "BCN"}
+          ]
+        },
+        {
+          name: "Frankfurt",
+          id: "FRA",
+          coordinates: [8.5, 50], // lon, lat
+          destinations: [
+            {id: "HAM"},
+            {id: "JFK"},
+            {id: "LHR"}
+          ]
+        },
+        {
+          name: "Barcelona",
+          id: "BCN",
+          coordinates: [2.0833333333333, 41.3],
+          destinations: [
             {id: "HAM"}
           ]
         },
         {
-          name: "Melbourne",
-          id: "MEB",
-          coordinates: [144.86666666667, -37.7], // lon, lat
+          name: "New York",
+          id: "JFK",
+          coordinates: [-73.783333333333, 40.633333333333],
           destinations: [
-            {id: "ANC"}
-          ]
-        },
-        {
-          name: "Anchorage",
-          id: "ANC",
-          coordinates: [-149.98333333333, 61.166666666667], // lon, lat
-          destinations: [
-            {id: "SXF"},
-            {id: "MEB"}
+            {id: "FRA"}
           ]
         }
       ],
@@ -82,7 +93,7 @@ class App extends Component {
           id: "Evil",
           visible: false,
           evil: true,
-          airport: "SXF"
+          airport: "LHR"
         }
       ],
       activeUser: "Evil",
@@ -146,7 +157,7 @@ class App extends Component {
     const { showOverlay, airports, users } = this.state
     const activeUser = users.find(user => user.id === this.state.activeUser)
 
-    const percentEmissions = this.state.totalEmissions / 800
+    const percentEmissions = this.state.totalEmissions / 5000
 
     if (this.state.gameOver) {
       return <div style={{textAlign: "center"}}>
@@ -198,7 +209,7 @@ class App extends Component {
       />)
 
     return <>
-      <ComposableMap width={600} height={300} projectionConfig={{ scale: 50 }}  projection="geoMercator" style={{background: "#556270"}}>
+      <ComposableMap width={600} height={300} projectionConfig={{ scale: 70 }}  projection="geoMercator" style={{background: "#556270"}}>
         <Geographies geography={geoUrl}>
           {({ geographies }) =>
             geographies.map(geo => <Geography key={geo.rsmKey} stroke="none" fill="#AACCB1" geography={geo} />)
