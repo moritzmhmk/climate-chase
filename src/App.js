@@ -8,6 +8,12 @@ const geoUrl =
   "https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json";
 
 
+const getEmissions = (from, to) => fetch(`https://www.skyscanner.net/g/chiron/api/v1/eco/average-emissions?routes=${from},${to}`, {
+    headers: new Headers({
+      'api-key': 'jacobs-2019'
+    })
+  }).then(res => res.json()).then(json => (json && json[0] && json[0].emissions) || 0)
+
 
 class App extends Component {
   constructor (props) {
@@ -15,21 +21,27 @@ class App extends Component {
     this.state = {
       airports: [
         {
-          name: "Berlin (Schoenefeld)",
+          name: "Berlin",
           id: "SXF",
           coordinates: [13.508611111111, 52.502777777778], // lon, lat
           destinations: [
-            {id: "LHR", emissions: 2000},
-            {id: "MEB", emissions: 2000},
-            {id: "ANC", emissions: 2000}
+            {id: "HAM"}
           ]
         },
         {
-          name: "London (Heathrow)",
+          name: "Hamburg",
+          id: "HAM",
+          coordinates: [9.987996048, 53.624830834], // lon, lat
+          destinations: [
+            {id: "LHR"}
+          ]
+        },
+        {
+          name: "London",
           id: "LHR",
           coordinates: [-0.45, 51.466666666667], // lon, lat
           destinations: [
-            {id: "MEB", emissions: 2000}
+            {id: "HAM"}
           ]
         },
         {
@@ -37,7 +49,7 @@ class App extends Component {
           id: "MEB",
           coordinates: [144.86666666667, -37.7], // lon, lat
           destinations: [
-            {id: "ANC", emissions: 2000}
+            {id: "ANC"}
           ]
         },
         {
@@ -45,8 +57,8 @@ class App extends Component {
           id: "ANC",
           coordinates: [-149.98333333333, 61.166666666667], // lon, lat
           destinations: [
-            {id: "SXF", emissions: 2000},
-            {id: "MEB", emissions: 2000}
+            {id: "SXF"},
+            {id: "MEB"}
           ]
         }
       ],
@@ -59,24 +71,42 @@ class App extends Component {
         {
           id: "Good 2",
           visible: true,
-          airport: "MEB"
+          airport: "LHR"
         },
         {
           id: "Good 3",
           visible: true,
-          airport: "MEB"
+          airport: "HAM"
         },
         {
           id: "Evil",
           visible: false,
           evil: true,
-          airport: "MEB"
+          airport: "SXF"
         }
       ],
       activeUser: "Evil",
       totalEmissions: 0,
       showOverlay: true
     }
+
+    this.state.airports.forEach(airport => {
+      airport.destinations.forEach((destination, index) => {
+        getEmissions(airport.id, destination.id)
+          .then(emissions => this.setState(
+            {
+              ...this.state,
+              airports: this.state.airports.map(_a => _a.id === airport.id ? ({
+                ..._a,
+                destinations: _a.destinations.map(_d => _d.id === destination.id ? ({
+                  ..._d,
+                  emissions
+                }) : _d)
+              }) : _a)
+            }
+          ))
+      })
+    })
   }
 
   travel (user, destination) {
@@ -116,7 +146,7 @@ class App extends Component {
     const { showOverlay, airports, users } = this.state
     const activeUser = users.find(user => user.id === this.state.activeUser)
 
-    const percentEmissions = this.state.totalEmissions / 200
+    const percentEmissions = this.state.totalEmissions / 800
 
     if (this.state.gameOver) {
       return <div style={{textAlign: "center"}}>
