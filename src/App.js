@@ -4,6 +4,9 @@ import { ComposableMap, Geographies, Geography, Marker, Line } from "react-simpl
 
 import UserView from './UserView'
 
+import winImage from './WIN.png'
+import loseImage from './LOSE.png'
+
 const geoUrl =
   "https://raw.githubusercontent.com/zcreativelabs/react-simple-maps/master/topojson-maps/world-110m.json";
 
@@ -162,12 +165,14 @@ class App extends Component {
     if (this.state.gameOver) {
       return <div style={{textAlign: "center"}}>
         <h1>GAME OVER - GOOD WINS</h1>
+        <img style={{width: "100%"}} src={winImage} />
       </div>
     }
 
     if (percentEmissions >= 100) {
       return <div style={{textAlign: "center"}}>
         <h1>GAME OVER - EVIL WINS</h1>
+        <img style={{width: "100%"}} src={loseImage} />
       </div>
     }
 
